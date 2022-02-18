@@ -18,6 +18,5 @@ runs:
   using: "composite"
   steps:
     - name: 'Deploy configuration to NGINX deployment'
-      run: |
-        ./deploy-config.sh ${{ inputs.subscription-id }} ${{ inputs.resource-group-name }} ${{ inputs.nginx-deployment-name }} ${{ inputs.nginx-config-file-path }}
+      run: deploy-config.sh ${{ inputs.subscription-id }} ${{ inputs.resource-group-name }} ${{ inputs.nginx-deployment-name }} ${{ inputs.nginx-config-file-path }}
       shell: bash
