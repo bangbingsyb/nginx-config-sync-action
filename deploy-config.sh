@@ -7,8 +7,8 @@ subscriptionId=$1
 resourceGroupName=$2
 nginxDeploymentName=$3
 nginxConfigurationFile=$4
-templateFile="template.json"
 
+# Read and encode the NGINX configuration file content.
 if [ -f "$nginxConfigurationFile" ]
 then
     echo "NGINX configuration"
@@ -24,13 +24,15 @@ echo "Base64 encoded NGINX configuration content"
 echo "$encodedConfigContent"
 echo ""
 
+# Deploy the configuration to the NGINX instance on Azure using an ARM template.
+uuid="$(cat /proc/sys/kernel/random/uuid)"
+templateFile="template-$uuid.json"
+templateDeploymentName="${nginxDeploymentName:0:20}-$uuid"
+
 wget -O "$templateFile" https://raw.githubusercontent.com/bangbingsyb/azure-quickstart-templates/master/quickstarts/nginx.nginxplus/nginx-single-configuration-file/azuredeploy.json
 echo "Downloaded the ARM template for deploying NGINX configuration"
 cat "$templateFile"
 echo ""
-
-uuid="$(cat /proc/sys/kernel/random/uuid)"
-templateDeploymentName="${nginxDeploymentName:0:20}-$uuid"
 
 echo "Deploying NGINX configuration"
 echo "Subscription: $subscriptionId"
