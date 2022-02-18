@@ -29,14 +29,15 @@ echo "Downloaded the ARM template for deploying NGINX configuration"
 cat "$templateFile"
 echo ""
 
+uuid="$(cat /proc/sys/kernel/random/uuid)"
+templateDeploymentName="$nginxDeploymentName-$uuid"
+
 echo "Deploying NGINX configuration"
 echo "Subscription: $subscriptionId"
 echo "Resource group: $resourceGroupName"
 echo "NGINX deployment name: $nginxDeploymentName"
+echo "Template deployment name: $templateDeploymentName"
 echo ""
-
-uuid="$(cat /proc/sys/kernel/random/uuid)"
-templateDeploymentName="$nginxDeploymentName-$uuid"
 
 az account set -s "$subscriptionId" --verbose
 az deployment group create --name "$templateDeploymentName" --resource-group "$resourceGroupName" --template-file "$templateFile" --parameters nginxDeploymentName="$nginxDeploymentName" rootConfigContent="$encodedConfigContent" --verbose
