@@ -20,7 +20,7 @@ else
 fi
 
 encodedConfigContent=$(base64 $nginxConfigurationFile)
-echo "Base64 encoded NGINX configuration"
+echo "Base64 encoded NGINX configuration content"
 echo "$encodedConfigContent"
 echo ""
 

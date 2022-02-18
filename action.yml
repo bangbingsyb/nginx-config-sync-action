@@ -1,5 +1,5 @@
 name: 'NGINX configuration sync'
-description: 'The action synchronizes NGINX configuration from a Git repository to a NGINX on Azure instance.'
+description: 'The action synchronizes NGINX configuration from a Git repository to an NGINX deployment on Azure.'
 inputs:
   subscription-id:
     description: 'The Azure subscription ID of the NGINX deployment'
