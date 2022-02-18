@@ -35,5 +35,8 @@ echo "Resource group: $resourceGroupName"
 echo "NGINX deployment name: $nginxDeploymentName"
 echo ""
 
+uuid="$(cat /proc/sys/kernel/random/uuid)"
+templateDeploymentName="$nginxDeploymentName-$uuid"
+
 az account set -s "$subscriptionId" --verbose
-az deployment group create --resource-group "$resourceGroupName" --template-file "$templateFile" --parameters nginxDeploymentName="$nginxDeploymentName" rootConfigContent="$encodedConfigContent" --verbose
+az deployment group create --name "$templateDeploymentName" --resource-group "$resourceGroupName" --template-file "$templateFile" --parameters nginxDeploymentName="$nginxDeploymentName" rootConfigContent="$encodedConfigContent" --verbose
