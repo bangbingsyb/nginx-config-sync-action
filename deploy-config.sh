@@ -30,7 +30,7 @@ cat "$templateFile"
 echo ""
 
 uuid="$(cat /proc/sys/kernel/random/uuid)"
-templateDeploymentName="$nginxDeploymentName-$uuid"
+templateDeploymentName="${nginxDeploymentName:0:20}-$uuid"
 
 echo "Deploying NGINX configuration"
 echo "Subscription: $subscriptionId"
