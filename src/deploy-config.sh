@@ -5,20 +5,25 @@ IFS=$'\n\t'
 subscriptionId=$1
 resourceGroupName=$2
 nginxDeploymentName=$3
-nginxConfigurationFile=$4
+configDirInRepo=$4
+rootConfigFilePath=$5
 
 # Read and encode the NGINX configuration file content.
-if [ -f "$nginxConfigurationFile" ]
+if [ -f "$configDirInRepo" ]
 then
-    echo "The NGINX configuration file was found."
+    echo "The NGINX configuration directory was found."
 else 
-    echo "The NGINX configuration file $nginxConfigurationFile does not exist."
+    echo "The NGINX configuration directory $configDirInRepo does not exist."
     exit 2
 fi
 
-encodedConfigContent=$(base64 "$nginxConfigurationFile")
-echo "Base64 encoded NGINX configuration content"
-echo "$encodedConfigContent"
+configTarball="nginx-conf.tar.gz" 
+tar -cvzf "$configTarball" -C "$configDirInRepo" --xform s:'./':: .
+tar -tf "$configTarball"
+
+encodedConfigTarball=$(base64 "$configTarball")
+echo "Base64 encoded NGINX configuration tarball"
+echo "$encodedConfigTarball"
 echo ""
 
 # Deploy the configuration to the NGINX instance on Azure using an ARM template.
@@ -39,4 +44,4 @@ echo "Template deployment name: $templateDeploymentName"
 echo ""
 
 az account set -s "$subscriptionId" --verbose
-az deployment group create --name "$templateDeploymentName" --resource-group "$resourceGroupName" --template-file "$templateFile" --parameters nginxDeploymentName="$nginxDeploymentName" rootConfigContent="$encodedConfigContent" --verbose
+az deployment group create --name "$templateDeploymentName" --resource-group "$resourceGroupName" --template-file "$templateFile" --parameters nginxDeploymentName="$nginxDeploymentName" rootFile="$rootConfigFilePath" tarball="$encodedConfigTarball" --verbose
