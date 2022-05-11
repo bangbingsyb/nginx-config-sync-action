@@ -42,14 +42,17 @@ if [[ ! -z "$transformed_config_dir_path" ]]
 then
     if [[ ! "$transformed_config_dir_path" = /* ]]
     then
-        echo "The transformed NGINX configuration directory path must be an absolute path that starts with '/'."
+        echo "The specified transformed NGINX configuration directory path '$transformed_config_dir_path' must be an absolute path that starts with '/'."
         exit 2
     elif [[ ! "$transformed_config_dir_path" = */ ]]
     then
-        echo "The transformed NGINX configuration directory path does not end with '/'. Appending a trailing '/'."
+        echo "The specified transformed NGINX configuration directory path '$transformed_config_dir_path' does not end with '/'. Appending a trailing '/'."
         transformed_config_dir_path="$transformed_config_dir_path/"
     fi
 fi
+
+transformed_root_config_file_path="$transformed_config_dir_path$root_config_file_name"
+echo "The transformed root NGINX configuration file path is '$transformed_root_config_file_path'."
 
 # Create a NGINX configuration tarball.
 
@@ -74,16 +77,16 @@ template_file="template-$uuid.json"
 template_deployment_name="${nginx_deployment_name:0:20}-$uuid"
 
 wget -O "$template_file" https://raw.githubusercontent.com/bangbingsyb/nginx-config-sync-action/main/src/nginx-for-azure-configuration-template.json
-echo "Downloaded the ARM template for deploying NGINX configuration"
+echo "Downloaded the ARM template for synchronizing NGINX configuration."
 cat "$template_file"
 echo ""
 
-echo "Deploying NGINX configuration"
-echo "Subscription: $subscription_id"
-echo "Resource group: $resource_group_name"
-echo "NGINX deployment name: $nginx_deployment_name"
-echo "Template deployment name: $template_deployment_name"
+echo "Synchronizing NGINX configuration"
+echo "Subscription ID: $subscription_id"
+echo "Resource group name: $resource_group_name"
+echo "NGINX for Azure deployment name: $nginx_deployment_name"
+echo "ARM template deployment name: $template_deployment_name"
 echo ""
 
 az account set -s "$subscription_id" --verbose
-az deployment group create --name "$template_deployment_name" --resource-group "$resource_group_name" --template-file "$template_file" --parameters nginxDeploymentName="$nginx_deployment_name" rootFile="$root_config_file_path" tarball="$encoded_config_tarball" --verbose
+az deployment group create --name "$template_deployment_name" --resource-group "$resource_group_name" --template-file "$template_file" --parameters nginxDeploymentName="$nginx_deployment_name" rootFile="$transformed_root_config_file_path" tarball="$encoded_config_tarball" --verbose
