@@ -11,11 +11,30 @@ transformed_config_dir_path=$6
 
 # Validation and preprocessing
 
+if [[ "$config_dir_path" = /* ]]
+then
+    echo "The NGINX configuration directory path in the repository '$config_dir_path' must be a relative path."
+    exit 2
+elif [[ ! "$config_dir_path" = */ ]]
+then
+    echo "The NGINX configuration directory path '$config_dir_path' does not end with '/'. Appending a trailing '/'."
+    config_dir_path="$config_dir_path/"
+fi
+
 if [[ -d "$config_dir_path" ]]
 then
-    echo "The NGINX configuration directory was found."
+    echo "The NGINX configuration directory '$config_dir_path' was found."
 else 
-    echo "The NGINX configuration directory $config_dir_path does not exist."
+    echo "The NGINX configuration directory '$config_dir_path' does not exist."
+    exit 2
+fi
+
+root_config_file_path="$config_dir_path$root_config_file_name"
+if [[ -f "$root_config_file_path" ]]
+then
+    echo "The root NGINX configuration file '$root_config_file_path' was found."
+else 
+    echo "The root NGINX configuration file '$root_config_file_path' does not exist."
     exit 2
 fi
 
@@ -67,4 +86,4 @@ echo "Template deployment name: $template_deployment_name"
 echo ""
 
 az account set -s "$subscription_id" --verbose
-az deployment group create --name "$template_deployment_name" --resource-group "$resource_group_name" --template-file "$template_file" --parameters nginxDeploymentName="$nginx_deployment_name" rootFile="$root_config_file_name" tarball="$encoded_config_tarball" --verbose
+az deployment group create --name "$template_deployment_name" --resource-group "$resource_group_name" --template-file "$template_file" --parameters nginxDeploymentName="$nginx_deployment_name" rootFile="$root_config_file_path" tarball="$encoded_config_tarball" --verbose
