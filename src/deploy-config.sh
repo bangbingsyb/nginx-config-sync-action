@@ -9,7 +9,7 @@ configDirInRepo=$4
 rootConfigFilePath=$5
 
 # Read and encode the NGINX configuration file content.
-if [ -f "$configDirInRepo" ]
+if [ -d "$configDirInRepo" ]
 then
     echo "The NGINX configuration directory was found."
 else 
