@@ -2,46 +2,69 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-subscriptionId=$1
-resourceGroupName=$2
-nginxDeploymentName=$3
-configDirInRepo=$4
-rootConfigFilePath=$5
+subscription_id=$1
+resource_group_name=$2
+nginx_deployment_name=$3
+config_dir_path=$4
+root_config_file_name=$5
+transformed_config_dir_path=$6
 
-# Read and encode the NGINX configuration file content.
-if [ -d "$configDirInRepo" ]
+# Validation and preprocessing
+
+if [[ -d "$config_dir_path" ]]
 then
     echo "The NGINX configuration directory was found."
 else 
-    echo "The NGINX configuration directory $configDirInRepo does not exist."
+    echo "The NGINX configuration directory $config_dir_path does not exist."
     exit 2
 fi
 
-configTarball="nginx-conf.tar.gz" 
-tar -cvzf "$configTarball" -C "$configDirInRepo" --xform s:'./':: .
-tar -tf "$configTarball"
+if [[ ! -z "$transformed_config_dir_path" ]]
+then
+    if [[ ! "$transformed_config_dir_path" = /* ]]
+    then
+        echo "The transformed NGINX configuration directory path must be an absolute path that starts with '/'."
+        exit 2
+    elif [[ ! "$transformed_config_dir_path" = */ ]]
+    then
+        echo "The transformed NGINX configuration directory path does not end with '/'. Appending a trailing '/'."
+        transformed_config_dir_path="$transformed_config_dir_path/"
+    fi
+fi
 
-encodedConfigTarball=$(base64 "$configTarball")
-echo "Base64 encoded NGINX configuration tarball"
-echo "$encodedConfigTarball"
+# Create a NGINX configuration tarball.
+
+config_tarball="nginx-config.tar.gz"
+
+echo "Creating a tarball from the NGINX configuration directory."
+tar -cvzf "$config_tarball" -C "$config_dir_path" --xform s:'./':"$transformed_config_dir_path": .
+echo "Successfully created the tarball from the NGINX configuration directory."
+
+echo "Listing the NGINX configuration file paths in the tarball."
+tar -tf "$config_tarball"
+
+encoded_config_tarball=$(base64 "$config_tarball")
+echo "The base64 encoded NGINX configuration tarball"
+echo "$encoded_config_tarball"
 echo ""
 
-# Deploy the configuration to the NGINX instance on Azure using an ARM template.
-uuid="$(cat /proc/sys/kernel/random/uuid)"
-templateFile="template-$uuid.json"
-templateDeploymentName="${nginxDeploymentName:0:20}-$uuid"
+# Synchronize the NGINX configuration tarball to the NGINX for Azure deployment.
 
-wget -O "$templateFile" https://raw.githubusercontent.com/bangbingsyb/nginx-config-sync-action/main/src/nginx-for-azure-configuration-template.json
+uuid="$(cat /proc/sys/kernel/random/uuid)"
+template_file="template-$uuid.json"
+template_deployment_name="${nginx_deployment_name:0:20}-$uuid"
+
+wget -O "$template_file" https://raw.githubusercontent.com/bangbingsyb/nginx-config-sync-action/main/src/nginx-for-azure-configuration-template.json
 echo "Downloaded the ARM template for deploying NGINX configuration"
-cat "$templateFile"
+cat "$template_file"
 echo ""
 
 echo "Deploying NGINX configuration"
-echo "Subscription: $subscriptionId"
-echo "Resource group: $resourceGroupName"
-echo "NGINX deployment name: $nginxDeploymentName"
-echo "Template deployment name: $templateDeploymentName"
+echo "Subscription: $subscription_id"
+echo "Resource group: $resource_group_name"
+echo "NGINX deployment name: $nginx_deployment_name"
+echo "Template deployment name: $template_deployment_name"
 echo ""
 
-az account set -s "$subscriptionId" --verbose
-az deployment group create --name "$templateDeploymentName" --resource-group "$resourceGroupName" --template-file "$templateFile" --parameters nginxDeploymentName="$nginxDeploymentName" rootFile="$rootConfigFilePath" tarball="$encodedConfigTarball" --verbose
+az account set -s "$subscription_id" --verbose
+az deployment group create --name "$template_deployment_name" --resource-group "$resource_group_name" --template-file "$template_file" --parameters nginxDeploymentName="$nginx_deployment_name" rootFile="$root_config_file_name" tarball="$encoded_config_tarball" --verbose
