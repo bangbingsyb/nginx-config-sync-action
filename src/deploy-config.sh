@@ -38,6 +38,7 @@ else
     exit 2
 fi
 
+transformed_config_dir_path=${transformed_config_dir_path+''}
 if [[ -n "$transformed_config_dir_path" ]]
 then
     if [[ ! "$transformed_config_dir_path" = /* ]]
