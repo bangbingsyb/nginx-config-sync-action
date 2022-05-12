@@ -38,7 +38,7 @@ else
     exit 2
 fi
 
-if [[ ! -z "$transformed_config_dir_path" ]]
+if [[ -n "$transformed_config_dir_path" ]]
 then
     if [[ ! "$transformed_config_dir_path" = /* ]]
     then
